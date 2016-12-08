@@ -3,6 +3,8 @@
     "description": "Automatically generate and render a Table of Contents for a post.",
     "type": "wordpress-plugin",
     "require-dev": {
+        "php" : "^5.5 || ^7.0",
+        "ext-xml": "*",
         "10up/wp_mock": "^0.1.1",
         "phpunit/phpunit": "^5.7",
         "stevegrunwell/wp-enforcer": "^0.4.1"
