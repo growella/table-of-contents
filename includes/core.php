@@ -43,6 +43,7 @@ function render_shortcode( $atts ) {
 	// Assemble our output.
 	$links = build_link_list( $headings );
 
+	// No links mean we have no reason to build a table of contents.
 	if ( empty( $links ) ) {
 		return;
 	}
