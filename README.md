@@ -1,5 +1,7 @@
 # Growella Table of Contents
 
+[![Build Status](https://travis-ci.org/Growella/table-of-contents.svg?branch=master)](https://travis-ci.org/Growella/table-of-contents)
+
 This WordPress plugin automatically generates a Table of Contents for the current post.
 
 > **Heads up!** This plugin is being developed in the open, with the eventual goal of both powering dynamic tables of contents on [Growella](https://growella.com) as well as being released on [WordPress.org](https://wordpress.org/plugins). That being said, the plugin is still very much under active development and may not be stable enough for production use!
