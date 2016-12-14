@@ -13,13 +13,43 @@ use Growella\TableOfContents\Headings as Headings;
 /**
  * Render the Table of Contents.
  *
- * @param array $atts Shortcode attributes.
+ * @param array $atts {
+ *   Shortcode attributes. All values are optional.
+ *
+ *   @type string $class Extra HTML class names (space-separated) to apply to the table of
+ *                       contents. Default is an empty string.
+ *   @type int    $depth How deeply nested the resulting table of contents should go, with -1 being
+ *                       all headings with no nesting, 0 being all top-level headings with no
+ *                       nesting, 1 being all top-level headings and one-level of sub-headings,
+ *                       etc. This argument is not currently being used but is planned for future
+ *                       versions. Default is -1.
+ *   @type string $tags  A comma-separated list of HTML elements that should be recognized as
+ *                       headings. Default is 'h1,h2,h3'.
+ *   @type string $title The title that should be rendered at the top of the generated table of
+ *                       contents. Default is "Table of Contents". Passing a false-y value will
+ *                       prevent this header from being included.
+ * }
  * @return string The rendered table of contents.
  */
 function render_shortcode( $atts ) {
-	$atts  = shortcode_atts( array(
-		'tags' => 'h1,h2,h3',
-	), $atts, 'toc' );
+	$defaults = array(
+		'class' => '',
+		'depth' => -1,
+		'tags'  => 'h1,h2,h3',
+		'title' => _x( 'Table of Contents', 'default title for Growella Table of Contents', 'growella-table-of-contents' ),
+	);
+
+	/**
+	 * Modify default settings for the Growella Table of Contents [toc] shortcode.
+	 *
+	 * @param array $defaults Default shortcode attributes.
+	 *
+	 * @see Growella\TableOfContents\Core\render_shortcode()
+	 */
+	$defaults = apply_filters( 'growella_table_of_contents_shortcode_defaults', $defaults );
+
+	// Merge the defaults in with user-supplied values.
+	$atts = shortcode_atts( $defaults, $atts, 'toc' );
 
 	// Parse the post content to get IDs.
 	$content = new \DOMDocument();
@@ -48,7 +78,20 @@ function render_shortcode( $atts ) {
 		return;
 	}
 
-	$output  = '<nav class="growella-table-of-contents">';
+	// Determine the classes to add to the output.
+	$classes = array_filter( array_merge(
+		array( 'growella-table-of-contents' ),
+		is_array( $atts['class'] ) ? $atts['class'] : explode( ' ', (string) $atts['class'] )
+	) );
+
+	$output  = '<nav class="' . join( ' ', array_map( 'esc_attr', $classes ) ) . '">';
+
+	// Begin with the heading.
+	if ( $atts['title'] ) {
+		$output .= sprintf( '<h2>%s</h2>', esc_html( $atts['title'] ) );
+	}
+
+	// Build the list of links.
 	$output .= '<ul>';
 
 	foreach ( $links as $link ) {
@@ -57,6 +100,15 @@ function render_shortcode( $atts ) {
 
 	$output .= '</ul>';
 	$output .= '</nav>';
+
+	/**
+	 * Filter the Growella Table of Contents just before returning the rendered shortcode output.
+	 *
+	 * @param string $output The rendered table of contents.
+	 * @param array  $atts   The shortcode attributes used to build the table of contents.
+	 * @param array  $links  The links used to build the table of contents.
+	 */
+	$output = apply_filters( 'growella_table_of_contents_render_shortcode', $output, $atts, $links );
 
 	return $output;
 }
