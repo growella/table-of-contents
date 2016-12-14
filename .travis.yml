@@ -9,6 +9,9 @@ env:
     - WP_VERSION=master
     - WP_VERSION=4.7
 
+before_install:
+  - sudo apt-get install -y libxml2-dev
+
 before_script:
   - composer install --prefer-source
   - mkdir -p build/logs

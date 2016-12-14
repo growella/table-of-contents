@@ -13,6 +13,7 @@ use Growella\TableOfContents;
 
 /**
  * @requires extension xml
+ * @requires extension libxml
  */
 class HeadingsTest extends \Growella\TableOfContents\TestCase {
 
