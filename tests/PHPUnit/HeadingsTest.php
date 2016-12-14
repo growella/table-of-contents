@@ -11,6 +11,9 @@ namespace Growella\TableOfContents\Headings;
 use WP_Mock as M;
 use Growella\TableOfContents;
 
+/**
+ * @requires extension xml
+ */
 class HeadingsTest extends \Growella\TableOfContents\TestCase {
 
 	protected $testFiles = array(
@@ -161,7 +164,6 @@ EOT;
 	}
 
 	public function testInjectHeadingIdsReturnsEarlyIfXMLExtensionIsNotLoaded() {
-		$this->markTestIncomplete( 'Need to emulate the extension being unavailable' );
 		M::wpFunction( __NAMESPACE__ . '\extension_loaded', array(
 			'return' => false,
 		) );
