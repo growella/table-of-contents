@@ -7,14 +7,15 @@ php:
 env:
   global:
     - WP_VERSION=master
+    - WP_VERSION=4.7
 
 before_script:
   - composer install --prefer-source
   - mkdir -p build/logs
 
 script:
-  - ./vendor/bin/phpcs --standard=phpcs.xml ./
   - ./vendor/bin/phpunit --coverage-clover build/logs/clover.xml
+  - if [ $CODECLIMATE_REPO_TOKEN ]; then ./vendor/bin/test-reporter; fi;
 
 cache:
   directories:
