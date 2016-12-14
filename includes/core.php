@@ -92,6 +92,15 @@ function render_shortcode( $atts ) {
 	$output .= '</ul>';
 	$output .= '</nav>';
 
+	/**
+	 * Filter the Growella Table of Contents just before returning the rendered shortcode.
+	 *
+	 * @param string $output The rendered Table of Contents.
+	 * @param array  $atts   The shortcode attributes used to build the Table of Contents.
+	 * @param array  $links  The links used to build the Table of Contents.
+	 */
+	$output = apply_filters( 'growella_table_of_contents_render_shortcode', $output, $atts, $links );
+
 	return $output;
 }
 add_shortcode( 'toc', __NAMESPACE__ . '\render_shortcode' );

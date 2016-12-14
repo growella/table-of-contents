@@ -118,6 +118,44 @@ EOT;
 		$this->assertNull( render_shortcode( array() ) );
 	}
 
+	/**
+	 * Since WP_Mock::onFilter() doesn't support wildcard with() calls, we'll mock apply_filters()
+	 * instead. The separate process prevents this from wreaking havoc on other tests.
+	 *
+	 * @runInSeparateProcess
+	 */
+	public function testRenderShortcodeOffersFilterJustBeforeReturning() {
+		M::wpFunction( 'shortcode_atts', array(
+			'return' => array(
+				'tags'  => 'h1,h2,h3',
+				'title' => false,
+			),
+		) );
+
+		M::wpFunction( 'get_the_content', array(
+			'return' => '<h2 id="first-heading">First heading</h2>',
+		) );
+
+		M::wpFunction( __NAMESPACE__ . '\build_link_list', array(
+			'return' => array(
+				'<a href="#first-heading">First heading</a>',
+			),
+		) );
+
+		M::wpFunction( __NAMESPACE__ . '\apply_filters', array(
+			'times'  => 1,
+			'args'   => array( 'growella_table_of_contents_render_shortcode', '*', '*', '*' ),
+			'return' => 'my-toc',
+		) );
+
+		M::wpPassthruFunction( __NAMESPACE__ . '\apply_filters' );
+
+		M::wpPassthruFunction( 'Growella\TableOfContents\Headings\inject_heading_ids' );
+		M::wpPassthruFunction( '_x' );
+
+		$this->assertEquals( 'my-toc', render_shortcode( array() ) );
+	}
+
 	public function testBuildLinkList() {
 		$dom   = new \DOMDocument;
 		$dom->loadHTML( '<h1 id="my-heading">My heading</h1>', LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD );
