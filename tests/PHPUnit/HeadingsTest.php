@@ -11,6 +11,9 @@ namespace Growella\TableOfContents\Headings;
 use WP_Mock as M;
 use Growella\TableOfContents;
 
+/**
+ * @requires extension xml
+ */
 class HeadingsTest extends \Growella\TableOfContents\TestCase {
 
 	protected $testFiles = array(
@@ -25,6 +28,16 @@ class HeadingsTest extends \Growella\TableOfContents\TestCase {
 		M::expectFilterAdded( 'the_content', __NAMESPACE__ . '\inject_heading_ids', 9 );
 
 		maybe_prepare_content( 'content' );
+	}
+
+	public function testMaybePrepareContentDoesntTouchContent() {
+		$content = uniqid();
+
+		M::wpFunction( 'has_shortcode', array(
+			'return' => true,
+		) );
+
+		$this->assertEquals( $content, maybe_prepare_content( $content ), 'maybe_prepare_content() should not alter the post content' );
 	}
 
 	public function testInjectHeadingIds() {
@@ -151,7 +164,6 @@ EOT;
 	}
 
 	public function testInjectHeadingIdsReturnsEarlyIfXMLExtensionIsNotLoaded() {
-		$this->markTestIncomplete( 'Need to emulate the extension being unavailable' );
 		M::wpFunction( __NAMESPACE__ . '\extension_loaded', array(
 			'return' => false,
 		) );

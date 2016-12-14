@@ -121,6 +121,6 @@ EOT;
 		M::wpPassthruFunction( 'esc_html' );
 		M::wpPassthruFunction( 'esc_attr' );
 
-		$this->assertEquals( $expected, build_link_list( $xpath->query( '//h2[@id]|h3[@id]' ) ) );
+		$this->assertEquals( $expected, build_link_list( $xpath->query( '//h2[@id]|//h3[@id]' ) ) );
 	}
 }
