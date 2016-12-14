@@ -10,6 +10,7 @@ namespace Growella\TableOfContents\Core;
 
 use WP_Mock as M;
 use Growella\TableOfContents;
+use Growella\TableOfContents\ReturnEarlyException;
 
 class CoreTest extends \Growella\TableOfContents\TestCase {
 
@@ -58,8 +59,41 @@ EOT;
 		) );
 
 		M::wpPassthruFunction( 'Growella\TableOfContents\Headings\inject_heading_ids' );
+		M::wpPassthruFunction( '_x' );
 
 		$this->assertEquals( $expected, render_shortcode( array() ) );
+	}
+
+	/**
+	 * Since WP_Mock::onFilter() doesn't support wildcard with() calls, we'll mock apply_filters()
+	 * instead. The separate process prevents this from wreaking havoc on other tests.
+	 *
+	 * @runInSeparateProcess
+	 */
+	public function testRenderShortcodeFiltersDefaultShortcodeAttributes() {
+		M::wpFunction( __NAMESPACE__ . '\apply_filters', array(
+			'args' => array( 'growella_table_of_contents_shortcode_defaults', '*' ),
+			'return' => array( 'foo' ),
+		) );
+
+		M::wpFunction( 'shortcode_atts', array(
+			'times'  => 1,
+			'args'   => array( array( 'foo' ), array(), 'toc' ),
+			'return' => function () {
+				throw new ReturnEarlyException;
+			}
+		) );
+
+		M::wpPassthruFunction( '_x' );
+
+		try {
+			render_shortcode( array() );
+
+		} catch ( ReturnEarlyException $e ) {
+			return;
+		}
+
+		$this->fail( 'shortcode_atts() did not receive the expected defaults argument' );
 	}
 
 	public function testRenderShortcodeReturnsEmptyNullIfNoLinksFound() {

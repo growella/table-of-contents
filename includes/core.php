@@ -13,13 +13,40 @@ use Growella\TableOfContents\Headings as Headings;
 /**
  * Render the Table of Contents.
  *
- * @param array $atts Shortcode attributes.
+ * @param array $atts {
+ *   Shortcode attributes. All values are optional.
+ *
+ *   @type int    $depth How deeply nested the resulting table of contents should go, with -1 being
+ *                       all headings with no nesting, 0 being all top-level headings with no
+ *                       nesting, 1 being all top-level headings and one-level of sub-headings,
+ *                       etc. This argument is not currently being used but is planned for future
+ *                       versions. Default is -1.
+ *   @type string $tags  A comma-separated list of HTML elements that should be recognized as
+ *                       headings. Default is 'h1,h2,h3'.
+ *   @type string $title The title that should be rendered at the top of the generated table of
+ *                       contents. Default is "Table of Contents". Passing a false-y value will
+ *                       prevent this header from being included.
+ * }
  * @return string The rendered table of contents.
  */
 function render_shortcode( $atts ) {
-	$atts  = shortcode_atts( array(
-		'tags' => 'h1,h2,h3',
-	), $atts, 'toc' );
+	$defaults = array(
+		'depth' => -1,
+		'tags'  => 'h1,h2,h3',
+		'title' => _x( 'Table of Contents', 'default title for Growella Table of Contents', 'growella-table-of-contents' ),
+	);
+
+	/**
+	 * Modify default settings for the Growella Table of Contents [toc] shortcode.
+	 *
+	 * @param array $defaults Default shortcode attributes.
+	 *
+	 * @see Growella\TableOfContents\Core\render_shortcode()
+	 */
+	$defaults = apply_filters( 'growella_table_of_contents_shortcode_defaults', $defaults );
+
+	// Merge the defaults in with user-supplied values.
+	$atts = shortcode_atts( $defaults, $atts, 'toc' );
 
 	// Parse the post content to get IDs.
 	$content = new \DOMDocument();
