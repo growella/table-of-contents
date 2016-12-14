@@ -76,6 +76,13 @@ function render_shortcode( $atts ) {
 	}
 
 	$output  = '<nav class="growella-table-of-contents">';
+
+	// Begin with the heading.
+	if ( $atts['title'] ) {
+		$output .= sprintf( '<h2>%s</h2>', esc_html( $atts['title'] ) );
+	}
+
+	// Build the list of links.
 	$output .= '<ul>';
 
 	foreach ( $links as $link ) {

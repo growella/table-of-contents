@@ -34,7 +34,7 @@ class CoreTest extends \Growella\TableOfContents\TestCase {
 <h2 id="second-heading">Second heading</h2>
 <p>Last paragraph</p>
 EOT;
-		$expected  = '<nav class="growella-table-of-contents"><ul>';
+		$expected  = '<nav class="growella-table-of-contents"><h2>My title</h2><ul>';
 		$expected .= '<li><a href="#first-heading">First heading</a></li>';
 		$expected .= '<li><a href="#sub-heading">Sub-heading</a></li>';
 		$expected .= '<li><a href="#second-heading">Second heading</a></li>';
@@ -42,7 +42,8 @@ EOT;
 
 		M::wpFunction( 'shortcode_atts', array(
 			'return' => array(
-				'tags' => 'h1,h2,h3',
+				'tags'  => 'h1,h2,h3',
+				'title' => 'My title',
 			),
 		) );
 
@@ -60,6 +61,7 @@ EOT;
 
 		M::wpPassthruFunction( 'Growella\TableOfContents\Headings\inject_heading_ids' );
 		M::wpPassthruFunction( '_x' );
+		M::wpPassthruFunction( 'esc_html' );
 
 		$this->assertEquals( $expected, render_shortcode( array() ) );
 	}
