@@ -27,6 +27,16 @@ class HeadingsTest extends \Growella\TableOfContents\TestCase {
 		maybe_prepare_content( 'content' );
 	}
 
+	public function testMaybePrepareContentDoesntTouchContent() {
+		$content = uniqid();
+
+		M::wpFunction( 'has_shortcode', array(
+			'return' => true,
+		) );
+
+		$this->assertEquals( $content, maybe_prepare_content( $content ), 'maybe_prepare_content() should not alter the post content' );
+	}
+
 	public function testInjectHeadingIds() {
 		$content  = <<<EOT
 <p>First paragraph.</p>
