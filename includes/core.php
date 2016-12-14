@@ -16,6 +16,8 @@ use Growella\TableOfContents\Headings as Headings;
  * @param array $atts {
  *   Shortcode attributes. All values are optional.
  *
+ *   @type string $class Extra HTML class names (space-separated) to apply to the table of
+ *                       contents. Default is an empty string.
  *   @type int    $depth How deeply nested the resulting table of contents should go, with -1 being
  *                       all headings with no nesting, 0 being all top-level headings with no
  *                       nesting, 1 being all top-level headings and one-level of sub-headings,
@@ -31,6 +33,7 @@ use Growella\TableOfContents\Headings as Headings;
  */
 function render_shortcode( $atts ) {
 	$defaults = array(
+		'class' => '',
 		'depth' => -1,
 		'tags'  => 'h1,h2,h3',
 		'title' => _x( 'Table of Contents', 'default title for Growella Table of Contents', 'growella-table-of-contents' ),
@@ -75,7 +78,13 @@ function render_shortcode( $atts ) {
 		return;
 	}
 
-	$output  = '<nav class="growella-table-of-contents">';
+	// Determine the classes to add to the output.
+	$classes = array_filter( array_merge(
+		array( 'growella-table-of-contents' ),
+		is_array( $atts['class'] ) ? $atts['class'] : explode( ' ', (string) $atts['class'] )
+	) );
+
+	$output  = '<nav class="' . join( ' ', array_map( 'esc_attr', $classes ) ) . '">';
 
 	// Begin with the heading.
 	if ( $atts['title'] ) {

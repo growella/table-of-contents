@@ -34,6 +34,23 @@ For that example, the generated table of contents would look something like:
 
 The `[toc]` shortcode has a number of available arguments, which can be used to control the generated table of contents on a per-post basis. If you would prefer to change the defaults on a global level, please [see the `growella_table_of_contents_shortcode_defaults` filter](#growella_table_of_contents_shortcode_defaults).
 
+
+#### class
+
+Extra HTML class names (space-separated) to apply to the table of contents. Default is an empty string.
+
+For ease of styling, the rendered table of contents will always have `.growella-table-of-contents`.
+
+
+##### Example
+
+Add classes "sticky" and "special-nav" to the rendered table of contents.
+
+```
+[toc class="sticky special-nav"]
+```
+
+
 #### depth
 
 > **Note:** This argument has not yet been implemented.

@@ -42,6 +42,7 @@ EOT;
 
 		M::wpFunction( 'shortcode_atts', array(
 			'return' => array(
+				'class' => '',
 				'tags'  => 'h1,h2,h3',
 				'title' => 'My title',
 			),
@@ -62,6 +63,7 @@ EOT;
 		M::wpPassthruFunction( 'Growella\TableOfContents\Headings\inject_heading_ids' );
 		M::wpPassthruFunction( '_x' );
 		M::wpPassthruFunction( 'esc_html' );
+		M::wpPassthruFunction( 'esc_attr' );
 
 		$this->assertEquals( $expected, render_shortcode( array() ) );
 	}
@@ -118,6 +120,70 @@ EOT;
 		$this->assertNull( render_shortcode( array() ) );
 	}
 
+	public function testRenderShortcodeHandlesClassAttribute() {
+		M::wpFunction( 'shortcode_atts', array(
+			'return' => array(
+				'class' => 'some-class another-class',
+				'tags'  => 'h1,h2,h3',
+				'title' => false,
+			),
+		) );
+
+		M::wpFunction( 'get_the_content', array(
+			'return' => '<h2 id="first-heading">First heading</h2>',
+		) );
+
+		M::wpFunction( __NAMESPACE__ . '\build_link_list', array(
+			'return' => array(
+				'<a href="#first-heading">First heading</a>',
+			),
+		) );
+
+		M::wpPassthruFunction( 'Growella\TableOfContents\Headings\inject_heading_ids' );
+		M::wpPassthruFunction( '_x' );
+		M::wpPassthruFunction( 'esc_attr' );
+
+		$this->assertContains(
+			'class="growella-table-of-contents some-class another-class"',
+			render_shortcode( array() )
+		);
+	}
+
+	/**
+	 * Same as testRenderShortcodeHandlesClassAttribute(), but the classes are already split into an
+	 * an array.
+	 *
+	 * This isn't possible with shortcode attributes, but defaults can be overridden via filter.
+	 */
+	public function testRenderShortcodeHandlesClassAttributeAsArray() {
+		M::wpFunction( 'shortcode_atts', array(
+			'return' => array(
+				'class' => array( 'some-class', 'another-class' ),
+				'tags'  => 'h1,h2,h3',
+				'title' => false,
+			),
+		) );
+
+		M::wpFunction( 'get_the_content', array(
+			'return' => '<h2 id="first-heading">First heading</h2>',
+		) );
+
+		M::wpFunction( __NAMESPACE__ . '\build_link_list', array(
+			'return' => array(
+				'<a href="#first-heading">First heading</a>',
+			),
+		) );
+
+		M::wpPassthruFunction( 'Growella\TableOfContents\Headings\inject_heading_ids' );
+		M::wpPassthruFunction( '_x' );
+		M::wpPassthruFunction( 'esc_attr' );
+
+		$this->assertContains(
+			'class="growella-table-of-contents some-class another-class"',
+			render_shortcode( array() )
+		);
+	}
+
 	/**
 	 * Since WP_Mock::onFilter() doesn't support wildcard with() calls, we'll mock apply_filters()
 	 * instead. The separate process prevents this from wreaking havoc on other tests.
@@ -127,6 +193,7 @@ EOT;
 	public function testRenderShortcodeOffersFilterJustBeforeReturning() {
 		M::wpFunction( 'shortcode_atts', array(
 			'return' => array(
+				'class' => '',
 				'tags'  => 'h1,h2,h3',
 				'title' => false,
 			),
@@ -152,6 +219,7 @@ EOT;
 
 		M::wpPassthruFunction( 'Growella\TableOfContents\Headings\inject_heading_ids' );
 		M::wpPassthruFunction( '_x' );
+		M::wpPassthruFunction( 'esc_attr' );
 
 		$this->assertEquals( 'my-toc', render_shortcode( array() ) );
 	}
