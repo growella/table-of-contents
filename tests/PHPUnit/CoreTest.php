@@ -107,6 +107,34 @@ EOT;
 		$this->assertEquals( $expected, render_shortcode( array() ) );
 	}
 
+	public function testRenderShortcodeHandlesUtf8() {
+		$content  = <<<EOT
+<h2 id="first-heading">First heading</h2>
+“”‘’‛‟,‚„'"′″´˝¸˛¿’ ♥ 😀💩
+EOT;
+		$expected  = '<nav class="growella-table-of-contents"><ul>';
+		$expected .= '<li><a href="#first-heading">First heading</a></li>';
+		$expected .= '</ul></nav>';
+
+		M::wpFunction( 'shortcode_atts', array(
+			'return' => array(
+				'class' => '',
+				'tags'  => 'h1,h2,h3',
+				'title' => false,
+			),
+		) );
+
+		M::wpFunction( 'get_the_content', array(
+			'return' => $content,
+		) );
+
+		M::wpPassthruFunction( 'Growella\TableOfContents\Headings\inject_heading_ids' );
+		M::wpPassthruFunction( '_x' );
+		M::wpPassthruFunction( 'esc_attr' );
+
+		$this->assertEquals( $expected, render_shortcode( array() ) );
+	}
+
 	/**
 	 * Since WP_Mock::onFilter() doesn't support wildcard with() calls, we'll mock apply_filters()
 	 * instead. The separate process prevents this from wreaking havoc on other tests.

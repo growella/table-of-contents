@@ -59,12 +59,17 @@ function inject_heading_ids( $content, $args = array() ) {
 	 * DOMDocument expects a root-level container, but that's not usually the case with WordPress
 	 * content. To get around this, we'll manually inject (then later remove) a div#gtoc-root element
 	 * around the post content.
+	 *
+	 * Additionally, unless we explicitly pass a character encoding, loadHTML will attempt to
+	 * read everything as ASCII, which will wreak havoc on content.
 	 */
-	$content = '<div id="gtoc-root">' . $content . '</div>';
+	$wrapped_content  = '<html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"></head><body>';
+	$wrapped_content .= '<div id="gtoc-root">' . $content . '</div>';
+	$wrapped_content .= '</body></html>';
 
 	// Load the document into DOMDocument.
 	$dom = new \DOMDocument();
-	$dom->loadHTML( $content, LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD );
+	$dom->loadHTML( $wrapped_content, LIBXML_HTML_NODEFDTD );
 
 	// Iterate through each tag.
 	$heading_tags = explode( ',', $args['tags'] );
@@ -84,7 +89,7 @@ function inject_heading_ids( $content, $args = array() ) {
 	}
 
 	// Retrieve the output, then manually strip the #gtoc-root element.
-	$output = $dom->saveHTML();
+	$output = $dom->saveHTML( $dom->getElementById( 'gtoc-root' ) );
 	$output = preg_replace( '/^\<div id="gtoc-root"\>/', '', $output );
 	$output = preg_replace( '/\<\/div\>$/', '', $output );
 

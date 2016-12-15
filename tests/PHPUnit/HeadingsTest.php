@@ -174,6 +174,21 @@ EOT;
 		inject_heading_ids( 'foo bar' );
 	}
 
+	public function testInjectHeadingIdsEncoding() {
+		$content  = <<<EOT
+<h2 id="first-heading">Some unicode characters to test</h2>
+“”‘’‛‟,‚„'"′″´˝¸˛¿’ ♥ 😀💩
+EOT;
+
+		M::wpFunction( 'wp_parse_args', array(
+			'return' => array(
+				'tags' => 'h1,h2',
+			),
+		) );
+
+		$this->assertEquals( $content, inject_heading_ids( $content ) );
+	}
+
 	public function testGetHeadingId() {
 		M::wpFunction( 'sanitize_title', array(
 			'times'  => 1,
