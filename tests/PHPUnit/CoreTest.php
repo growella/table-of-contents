@@ -68,6 +68,45 @@ EOT;
 		$this->assertEquals( $expected, render_shortcode( array() ) );
 	}
 
+	public function testRenderShortcodeWithoutWpautopApplied() {
+		$content  = <<<EOT
+<h2 id="first-heading">First heading</h2>
+First paragraph.
+
+<h2 id="second-heading">Second heading</h2>
+A second paragraph.
+EOT;
+		$expected  = '<nav class="growella-table-of-contents"><ul>';
+		$expected .= '<li><a href="#first-heading">First heading</a></li>';
+		$expected .= '<li><a href="#second-heading">Second heading</a></li>';
+		$expected .= '</ul></nav>';
+
+		M::wpFunction( 'shortcode_atts', array(
+			'return' => array(
+				'class' => '',
+				'tags'  => 'h1,h2,h3',
+				'title' => false,
+			),
+		) );
+
+		M::wpFunction( 'get_the_content', array(
+			'return' => $content,
+		) );
+
+		M::wpFunction( __NAMESPACE__ . '\build_link_list', array(
+			'return' => array(
+				'<a href="#first-heading">First heading</a>',
+				'<a href="#second-heading">Second heading</a>',
+			),
+		) );
+
+		M::wpPassthruFunction( 'Growella\TableOfContents\Headings\inject_heading_ids' );
+		M::wpPassthruFunction( '_x' );
+		M::wpPassthruFunction( 'esc_attr' );
+
+		$this->assertEquals( $expected, render_shortcode( array() ) );
+	}
+
 	/**
 	 * Since WP_Mock::onFilter() doesn't support wildcard with() calls, we'll mock apply_filters()
 	 * instead. The separate process prevents this from wreaking havoc on other tests.
@@ -239,6 +278,30 @@ EOT;
 		$this->assertEquals( $expected, build_link_list( $xpath->query( '//h1[@id]' ) ) );
 	}
 
+	public function testBuildLinkListAppliesFilter() {
+		$dom   = new \DOMDocument;
+		$dom->loadHTML( '<h1 id="my-heading">My heading</h1>', LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD );
+		$xpath = new \DOMXpath( $dom );
+		$query = $xpath->query( '//h1[@id]' );
+
+		$expected = array(
+			'<a href="#my-heading">My filtered heading</a>'
+		);
+
+		M::onFilter( 'growella_table_of_contents_link_anchor_text' )
+			->with( 'My heading', $query->item( 0 ) )
+			->reply( 'My filtered heading' );
+
+		M::wpPassthruFunction( 'esc_html' );
+		M::wpPassthruFunction( 'esc_attr' );
+
+		$this->assertEquals(
+			$expected,
+			build_link_list( $query ),
+			'build_link_list() should call the growella_table_of_contents_link_anchor_text filter.'
+		);
+	}
+
 	public function testBuildLinkListWithMultipleHeadings() {
 				$content  = <<<EOT
 <div>
@@ -264,5 +327,81 @@ EOT;
 		M::wpPassthruFunction( 'esc_attr' );
 
 		$this->assertEquals( $expected, build_link_list( $xpath->query( '//h2[@id]|//h3[@id]' ) ) );
+	}
+
+	/**
+	 * Since WP_Mock::onFilter() doesn't support wildcard with() calls, we'll mock apply_filters()
+	 * instead. The separate process prevents this from wreaking havoc on other tests.
+	 *
+	 * @runInSeparateProcess
+	 */
+	public function testBuildLinkListWithoutWpautop() {
+		$content = <<<EOT
+<h2 id="first-heading">First heading</h2>
+First paragraph.
+
+<h2 id="second-heading">Second heading</h2>
+A second paragraph.
+EOT;
+		$dom     = new \DOMDocument;
+		$dom->loadHTML( $content, LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD );
+		$xpath   = new \DOMXpath( $dom );
+
+		$expected = array(
+			'<a href="#first-heading">First heading</a>',
+			'<a href="#second-heading">Second heading</a>',
+		);
+
+		M::wpFunction( __NAMESPACE__ . '\apply_filters', array(
+			'args'            => array( 'growella_table_of_contents_link_anchor_text', '*', '*' ),
+			'return_in_order' => array( 'First heading', 'Second heading' ),
+		) );
+
+		M::wpPassthruFunction( 'esc_html' );
+		M::wpPassthruFunction( 'esc_attr' );
+
+		$this->assertEquals( $expected, build_link_list( $xpath->query( '//h2[@id]' ) ) );
+	}
+
+	public function testStripAdditionalLines() {
+		$content = <<<EOT
+Line one
+Line two
+Line three
+EOT;
+		$this->assertEquals( 'Line one', strip_additional_lines( $content ) );
+	}
+
+	public function testStripAdditionalLinesWithNewline() {
+		$content  = "Line one\n";
+		$content .= "Line two\n";
+
+		$this->assertEquals( 'Line one', strip_additional_lines( $content ) );
+	}
+
+	public function testStripAdditionalLinesWithReturn() {
+		$content  = "Line one\r";
+		$content .= "Line two\r";
+
+		$this->assertEquals( 'Line one', strip_additional_lines( $content ) );
+	}
+
+	public function testStripAdditionalLinesWithNewlineReturn() {
+		$content  = "Line one\r\n";
+		$content .= "Line two\r\n";
+
+		$this->assertEquals( 'Line one', strip_additional_lines( $content ) );
+	}
+
+	public function testStripAdditionalLinesWithLeadingNewline() {
+		$content  = "\nLine one\n";
+
+		$this->assertEquals( 'Line one', strip_additional_lines( $content ) );
+	}
+
+	public function testStripAdditionalLinesStripsLeadingAndTrailingSpaces() {
+		$content  = " Line one \n Line two";
+
+		$this->assertEquals( 'Line one', strip_additional_lines( $content ) );
 	}
 }
