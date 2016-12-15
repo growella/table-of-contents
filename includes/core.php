@@ -52,11 +52,14 @@ function render_shortcode( $atts ) {
 	$atts = shortcode_atts( $defaults, $atts, 'toc' );
 
 	// Parse the post content to get IDs.
-	$content = new \DOMDocument();
-	$content->loadHTML( Headings\inject_heading_ids( get_the_content(), $atts ), LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD );
+	$content  = '<html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"></head><body>';
+	$content .= Headings\inject_heading_ids( get_the_content(), $atts );
+	$content .= '</body></html>';
+	$doc      = new \DOMDocument();
+	$doc->loadHTML( $content, LIBXML_HTML_NODEFDTD );
 
 	// We'll parse the document using DOMXpath to get any of the whitelisted tags with ID attributes.
-	$xpath = new \DOMXpath( $content );
+	$xpath = new \DOMXpath( $doc );
 	$query = array();
 
 	foreach ( explode( ',', (string) $atts['tags'] ) as $tag ) {
