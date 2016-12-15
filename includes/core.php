@@ -123,13 +123,38 @@ add_shortcode( 'toc', __NAMESPACE__ . '\render_shortcode' );
 function build_link_list( $list ) {
 	$links = array();
 
-	foreach ( $list as $item ) {
+	foreach ( $list as $element ) {
+		$anchor = $element->textContent;
+
+		/**
+		 * Filter the anchor text for a table of contents link before it's put into a link.
+		 *
+		 * @param string     $anchor  The anchor text to be used when building the link.
+		 * @param DOMElement $element A DOMElement object representing the DOM node.
+		 */
+		$anchor = apply_filters( 'growella_table_of_contents_link_anchor_text', $anchor, $element );
+
 		$links[] = sprintf(
 			'<a href="#%s">%s</a>',
-			esc_attr( $item->getAttribute( 'id' ) ),
-			$item->nodeValue
+			esc_attr( $element->getAttribute( 'id' ) ),
+			$anchor
 		);
 	}
 
 	return $links;
 }
+
+/**
+ * Split anchor text on the first newline to account for any parsing errors from libxml.
+ *
+ * @param string $anchor The anchor text to be used when building the link.
+ * @return string The $anchor with anything not on the first line stripped.
+ */
+function strip_additional_lines( $anchor ) {
+
+	// A \r, \n, or any combination of the two should be a good indication we have our one line.
+	$regex = '/(.+?)[\r\n].*/s';
+
+	return trim( preg_replace( $regex, '$1', $anchor ) );
+}
+add_filter( 'growella_table_of_contents_link_anchor_text', __NAMESPACE__ . '\strip_additional_lines', 1 );

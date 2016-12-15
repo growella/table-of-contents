@@ -150,3 +150,37 @@ Filter the Growella Table of Contents just before returning the rendered shortco
 <dd>The shortcode attributes used to build the table of contents.</dd>
 <dt>array $links</dt>
 <dd>The links used to build the table of contents.</dd>
+</dl>
+
+
+#### growella_table_of_contents_link_anchor_text
+
+Filter the anchor text for a table of contents link before it's put into a link.
+
+<dl>
+<dt>string $anchor</dt>
+<dd>The anchor text to be used when building the link.</dd>
+<dt>DOMElement $element</dt>
+<dd>A DOMElement object representing the DOM node.</dd>
+</dl>
+
+##### Example
+
+If headings are longer than 80 characters, truncate the link and append an ellipsis:
+
+```php
+/**
+ * Truncate anchor text in the table of contents to 80 characters.
+ *
+ * @param string $anchor  The anchor text to be used when building the link.
+ * @return string The filtered $anchor text.
+ */
+function mytheme_truncate_toc_links( $anchor ) {
+	if ( 80 < strlen( $anchor ) ) {
+		$anchor = substr( $anchor, 0, 80 ) . '&hellip;';
+	}
+
+	return $anchor;
+}
+add_filter( 'growella_table_of_contents_link_anchor_text', 'mytheme_truncate_toc_links' );
+```
