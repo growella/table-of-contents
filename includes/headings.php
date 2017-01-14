@@ -47,6 +47,9 @@ function inject_heading_ids( $content, $args = array() ) {
 		'tags' => 'h1,h2,h3,h4,h5,h6',
 	) );
 
+	// This should be set in render_shortcode(), but be super-explicit.
+	libxml_use_internal_errors( true );
+
 	/*
 	 * DOMDocument expects a root-level container, but that's not usually the case with WordPress
 	 * content. To get around this, we'll manually inject (then later remove) a div#gtoc-root element
@@ -60,7 +63,7 @@ function inject_heading_ids( $content, $args = array() ) {
 	$wrapped_content .= '</body></html>';
 
 	// Load the document into DOMDocument.
-	$dom = new \DOMDocument();
+	$dom = new \DOMDocument;
 	$dom->loadHTML( $wrapped_content, LIBXML_HTML_NODEFDTD );
 
 	// Iterate through each tag.
