@@ -291,6 +291,143 @@ EOT;
 		$this->assertEquals( 'my-toc', render_shortcode( array() ) );
 	}
 
+	/**
+	 * DOMDocument typically fails on HTML5 elements, but that should be no reason to prevent content
+	 * from being able to use them.
+	 */
+	public function testRenderShortcodeHandlesHTML5Elements() {
+		$content   = <<<EOT
+<header>This is a header</header>
+<h2 id="first-heading">First heading</h2>
+<aside>This is an aside</aside>
+<p>Paragraph</p>
+<footer>This is a footer</footer>
+EOT;
+		$expected  = '<nav class="growella-table-of-contents"><h2>My title</h2><ul>';
+		$expected .= '<li><a href="#first-heading">First heading</a></li>';
+		$expected .= '</ul></nav>';
+
+		M::wpFunction( 'shortcode_atts', array(
+			'return' => array(
+				'class' => '',
+				'tags'  => 'h1,h2,h3',
+				'title' => 'My title',
+			),
+		) );
+
+		M::wpFunction( 'get_the_content', array(
+			'return' => $content,
+		) );
+
+		M::wpFunction( __NAMESPACE__ . '\build_link_list', array(
+			'return' => array( '<a href="#first-heading">First heading</a>' ),
+		) );
+
+		M::wpPassthruFunction( 'Growella\TableOfContents\Headings\inject_heading_ids' );
+		M::wpPassthruFunction( '_x' );
+		M::wpPassthruFunction( 'esc_html' );
+		M::wpPassthruFunction( 'esc_attr' );
+
+		$this->assertEquals( $expected, render_shortcode( array() ) );
+	}
+
+	/**
+	 * Since the HTML5 supports means switching to libxml_use_internal_errors( true ), we need to
+	 * ensure we're respecting the previous value when we're done.
+	 *
+	 * @runInSeparateProcess
+	 */
+	public function testRenderShortcodeRespectsLibXMLConfiguration() {
+		$expected  = '<nav class="growella-table-of-contents"><h2>My title</h2><ul>';
+		$expected .= '<li><a href="#first-heading">First heading</a></li>';
+		$expected .= '</ul></nav>';
+
+		M::wpFunction( 'shortcode_atts', array(
+			'return' => array(
+				'class' => '',
+				'tags'  => 'h1,h2,h3',
+				'title' => 'My title',
+			),
+		) );
+
+		M::wpFunction( 'get_the_content', array(
+			'return_in_order' => array( '<h2 id="first-heading">First heading</h2>', '' ),
+		) );
+
+		M::wpFunction( __NAMESPACE__ . '\build_link_list', array(
+			'return_in_order' => array( array( '<a href="#first-heading">First heading</a>' ), '' ),
+		) );
+
+		M::wpFunction( __NAMESPACE__ . '\libxml_clear_errors', array(
+			'times'  => '1+',
+		) );
+
+		M::wpPassthruFunction( 'Growella\TableOfContents\Headings\inject_heading_ids' );
+		M::wpPassthruFunction( '_x' );
+		M::wpPassthruFunction( 'esc_html' );
+		M::wpPassthruFunction( 'esc_attr' );
+
+		// Round one: normal return.
+		libxml_use_internal_errors( false );
+		render_shortcode( array() );
+		$this->assertFalse( libxml_use_internal_errors() );
+
+		// Round two: returning early (due to WP_Mock's 'return_in_order').
+		libxml_use_internal_errors( false );
+		render_shortcode( array() );
+		$this->assertFalse( libxml_use_internal_errors() );
+
+		// Ensure that if we're already setting it to true that value is respected.
+		libxml_use_internal_errors( true );
+		render_shortcode( array() );
+		$this->assertTrue( libxml_use_internal_errors() );
+	}
+
+	/**
+	 * If there are existing LibXML errors (e.g. the site owner was already using LibXML's internal
+	 * error handling and had something in the error buffer), we want to avoid calling
+	 * libxml_clear_errors(), since we'd be silencing errors that have nothing to do with us.
+	 *
+	 * @runInSeparateProcess
+	 */
+	public function testRenderShortcodeRespectsDoesntClearExistingLibXMLErrors() {
+		$expected  = '<nav class="growella-table-of-contents"><h2>My title</h2><ul>';
+		$expected .= '<li><a href="#first-heading">First heading</a></li>';
+		$expected .= '</ul></nav>';
+
+		M::wpFunction( 'shortcode_atts', array(
+			'return' => array(
+				'class' => '',
+				'tags'  => 'h1,h2,h3',
+				'title' => 'My title',
+			),
+		) );
+
+		M::wpFunction( 'get_the_content', array(
+			'return_in_order' => array( '<h2 id="first-heading">First heading</h2>', '' ),
+		) );
+
+		M::wpFunction( __NAMESPACE__ . '\build_link_list', array(
+			'return_in_order' => array( array( '<a href="#first-heading">First heading</a>' ), '' ),
+		) );
+
+		M::wpFunction( __NAMESPACE__ . '\libxml_get_errors', array(
+			'return' => array( 'here', 'are', 'some', 'errors' ),
+		) );
+
+		M::wpFunction( __NAMESPACE__ . '\libxml_clear_errors', array(
+			'times'  => 0,
+		) );
+
+		M::wpPassthruFunction( 'Growella\TableOfContents\Headings\inject_heading_ids' );
+		M::wpPassthruFunction( '_x' );
+		M::wpPassthruFunction( 'esc_html' );
+		M::wpPassthruFunction( 'esc_attr' );
+
+		libxml_use_internal_errors( true );
+		render_shortcode( array() );
+	}
+
 	public function testBuildLinkList() {
 		$dom   = new \DOMDocument;
 		$dom->loadHTML( '<h1 id="my-heading">My heading</h1>', LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD );

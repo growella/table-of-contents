@@ -47,6 +47,16 @@ function render_shortcode( $atts ) {
 		'title' => _x( 'Table of Contents', 'default title for Growella Table of Contents', 'growella-table-of-contents' ),
 	);
 
+	/*
+	 * Determine how XML errors are currently being handled (so we can respect that when we're done),
+	 * then ensure we're handling errors internally.
+	 *
+	 * Additionally, if libxml_use_internal_errors() is already true, we want to note if there are
+	 * already errors in the buffer, so we don't accidentally clear them later.
+	 */
+	$libxml_use_internal_errors = libxml_use_internal_errors( true );
+	$libxml_has_existing_errors = $libxml_use_internal_errors ? ! empty( libxml_get_errors() ) : false;
+
 	/**
 	 * Modify default settings for the Growella Table of Contents [toc] shortcode.
 	 *
@@ -63,7 +73,7 @@ function render_shortcode( $atts ) {
 	$content  = '<html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"></head><body>';
 	$content .= Headings\inject_heading_ids( get_the_content(), $atts );
 	$content .= '</body></html>';
-	$doc      = new \DOMDocument();
+	$doc      = new \DOMDocument;
 	$doc->loadHTML( $content, LIBXML_HTML_NODEFDTD );
 
 	// We'll parse the document using DOMXpath to get any of the whitelisted tags with ID attributes.
@@ -75,6 +85,12 @@ function render_shortcode( $atts ) {
 	}
 
 	$headings = $xpath->query( implode( '|', $query ) );
+
+	// Clear any LibXML errors in the buffer that we may have caused, then reset default handling.
+	if ( ! $libxml_has_existing_errors ) {
+		libxml_clear_errors();
+	}
+	libxml_use_internal_errors( $libxml_use_internal_errors );
 
 	// Return early if we don't have any headings.
 	if ( 0 === $headings->length ) {
