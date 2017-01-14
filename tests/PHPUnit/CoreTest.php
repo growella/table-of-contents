@@ -300,7 +300,6 @@ EOT;
 			'<a href="#my-heading">My heading</a>'
 		);
 
-		M::wpPassthruFunction( 'esc_html' );
 		M::wpPassthruFunction( 'esc_attr' );
 
 		$this->assertEquals( $expected, build_link_list( $xpath->query( '//h1[@id]' ) ) );
@@ -320,13 +319,28 @@ EOT;
 			->with( 'My heading', $query->item( 0 ) )
 			->reply( 'My filtered heading' );
 
-		M::wpPassthruFunction( 'esc_html' );
 		M::wpPassthruFunction( 'esc_attr' );
 
 		$this->assertEquals(
 			$expected,
 			build_link_list( $query ),
 			'build_link_list() should call the growella_table_of_contents_link_anchor_text filter.'
+		);
+	}
+
+	public function testBuildLinkListIgnoresEmptyLinks() {
+		$dom   = new \DOMDocument;
+		$dom->loadHTML( '<h1 id="my-heading">My heading</h1>', LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD );
+		$xpath = new \DOMXpath( $dom );
+		$query = $xpath->query( '//h1[@id]' );
+
+		M::onFilter( 'growella_table_of_contents_link_anchor_text' )
+			->with( 'My heading', $query->item( 0 ) )
+			->reply( '' );
+
+		$this->assertEmpty(
+			build_link_list( $query ),
+			'build_link_list() should ignore table of content links with empty anchor text.'
 		);
 	}
 
@@ -351,7 +365,6 @@ EOT;
 			'<a href="#second-heading">Second heading</a>',
 		);
 
-		M::wpPassthruFunction( 'esc_html' );
 		M::wpPassthruFunction( 'esc_attr' );
 
 		$this->assertEquals( $expected, build_link_list( $xpath->query( '//h2[@id]|//h3[@id]' ) ) );
@@ -385,7 +398,6 @@ EOT;
 			'return_in_order' => array( 'First heading', 'Second heading' ),
 		) );
 
-		M::wpPassthruFunction( 'esc_html' );
 		M::wpPassthruFunction( 'esc_attr' );
 
 		$this->assertEquals( $expected, build_link_list( $xpath->query( '//h2[@id]' ) ) );
