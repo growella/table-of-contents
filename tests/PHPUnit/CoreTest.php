@@ -330,6 +330,22 @@ EOT;
 		);
 	}
 
+	public function testBuildLinkListIgnoresEmptyLinks() {
+		$dom   = new \DOMDocument;
+		$dom->loadHTML( '<h1 id="my-heading">My heading</h1>', LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD );
+		$xpath = new \DOMXpath( $dom );
+		$query = $xpath->query( '//h1[@id]' );
+
+		M::onFilter( 'growella_table_of_contents_link_anchor_text' )
+			->with( 'My heading', $query->item( 0 ) )
+			->reply( '' );
+
+		$this->assertEmpty(
+			build_link_list( $query ),
+			'build_link_list() should ignore table of content links with empty anchor text.'
+		);
+	}
+
 	public function testBuildLinkListWithMultipleHeadings() {
 				$content  = <<<EOT
 <div>

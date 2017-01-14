@@ -137,11 +137,13 @@ function build_link_list( $list ) {
 		 */
 		$anchor = apply_filters( 'growella_table_of_contents_link_anchor_text', $anchor, $element );
 
-		$links[] = sprintf(
-			'<a href="#%s">%s</a>',
-			esc_attr( $element->getAttribute( 'id' ) ),
-			$anchor
-		);
+		if ( $anchor ) {
+			$links[] = sprintf(
+				'<a href="#%s">%s</a>',
+				esc_attr( $element->getAttribute( 'id' ) ),
+				$anchor
+			);
+		}
 	}
 
 	return $links;
