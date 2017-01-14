@@ -300,7 +300,6 @@ EOT;
 			'<a href="#my-heading">My heading</a>'
 		);
 
-		M::wpPassthruFunction( 'esc_html' );
 		M::wpPassthruFunction( 'esc_attr' );
 
 		$this->assertEquals( $expected, build_link_list( $xpath->query( '//h1[@id]' ) ) );
@@ -320,7 +319,6 @@ EOT;
 			->with( 'My heading', $query->item( 0 ) )
 			->reply( 'My filtered heading' );
 
-		M::wpPassthruFunction( 'esc_html' );
 		M::wpPassthruFunction( 'esc_attr' );
 
 		$this->assertEquals(
@@ -367,7 +365,6 @@ EOT;
 			'<a href="#second-heading">Second heading</a>',
 		);
 
-		M::wpPassthruFunction( 'esc_html' );
 		M::wpPassthruFunction( 'esc_attr' );
 
 		$this->assertEquals( $expected, build_link_list( $xpath->query( '//h2[@id]|//h3[@id]' ) ) );
@@ -401,7 +398,6 @@ EOT;
 			'return_in_order' => array( 'First heading', 'Second heading' ),
 		) );
 
-		M::wpPassthruFunction( 'esc_html' );
 		M::wpPassthruFunction( 'esc_attr' );
 
 		$this->assertEquals( $expected, build_link_list( $xpath->query( '//h2[@id]' ) ) );
