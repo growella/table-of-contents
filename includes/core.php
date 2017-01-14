@@ -32,6 +32,14 @@ use Growella\TableOfContents\Headings as Headings;
  * @return string The rendered table of contents.
  */
 function render_shortcode( $atts ) {
+	if ( ! extension_loaded( 'xml' ) ) {
+		trigger_error(
+			esc_html__( 'Unable to inject id attributes, as the PHP XML extension is not loaded', 'growella-table-of-contents' ),
+			E_USER_NOTICE
+		);
+		return;
+	}
+
 	$defaults = array(
 		'class' => '',
 		'depth' => -1,

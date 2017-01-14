@@ -43,14 +43,6 @@ add_filter( 'the_content', __NAMESPACE__ . '\maybe_prepare_content', 1 );
  * @return string The $content string with id attributes injected into the headings.
  */
 function inject_heading_ids( $content, $args = array() ) {
-	if ( ! extension_loaded( 'xml' ) ) {
-		trigger_error(
-			esc_html__( 'Unable to inject id attributes, as the PHP XML extension is not loaded', 'growella-table-of-contents' ),
-			E_USER_NOTICE
-		);
-		return;
-	}
-
 	$args = wp_parse_args( $args, array(
 		'tags' => 'h1,h2,h3,h4,h5,h6',
 	) );
