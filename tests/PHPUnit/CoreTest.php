@@ -540,6 +540,23 @@ EOT;
 		$this->assertEquals( $expected, build_link_list( $xpath->query( '//h2[@id]' ) ) );
 	}
 
+	/**
+	 * @link https://github.com/growella/table-of-contents/issues/3
+	 */
+	public function testBuildLinkListWithSpecialCharacters() {
+		$dom   = new \DOMDocument;
+		$dom->loadHTML( '<h1 id="my-heading">My $5 heading</h1>', LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD );
+		$xpath = new \DOMXpath( $dom );
+
+		$expected = array(
+			'<a href="#my-heading">My $5 heading</a>'
+		);
+
+		M::wpPassthruFunction( 'esc_attr' );
+
+		$this->assertEquals( $expected, build_link_list( $xpath->query( '//h1[@id]' ) ) );
+	}
+
 	public function testStripAdditionalLines() {
 		$content = <<<EOT
 Line one
@@ -580,5 +597,22 @@ EOT;
 		$content  = " Line one \n Line two";
 
 		$this->assertEquals( 'Line one', strip_additional_lines( $content ) );
+	}
+
+	/**
+	 * @link https://github.com/growella/table-of-contents/issues/3
+	 */
+	public function testStripAdditionalLinesWithReservedRegexCharacters() {
+		$tests = array(
+			'Gimme a $5 footlong',
+			'I am ^_^ (happy)',
+			's/foo/bar',
+			'Can I? Oh please, oh please?!'
+		);
+
+		// Each of these should come out exactly as they went in.
+		foreach ( $tests as $test ) {
+			$this->assertEquals( $test, strip_additional_lines( $test ) );
+		}
 	}
 }
